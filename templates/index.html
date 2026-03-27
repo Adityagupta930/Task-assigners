@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meeting Task Assigner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #222; padding: 30px; }
+
+    h1 { font-size: 1.6rem; margin-bottom: 24px; color: #1a1a2e; }
+
+    .section { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.9rem; }
+
+    input[type="text"], textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; margin-bottom: 14px; }
+
+    textarea { resize: vertical; min-height: 100px; }
+
+    .member-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+
+    .member-row input { flex: 1; margin-bottom: 0; }
+
+    .btn-add { background: #e8f0fe; color: #1967d2; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: bold; }
+
+    .btn-remove { background: #fce8e6; color: #c5221f; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+
+    .btn-submit { background: #1967d2; color: #fff; border: none; padding: 10px 28px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    #status { margin-top: 12px; font-size: 0.9rem; color: #555; }
+
+    .error-text { color: #c5221f; font-weight: bold; }
+
+    #results { display: none; }
+
+    .transcript-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; font-size: 0.85rem; white-space: pre-wrap; max-height: 180px; overflow-y: auto; margin-bottom: 20px; }
+
+    h2 { font-size: 1.1rem; margin-bottom: 12px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+
+    th { background: #1967d2; color: #fff; padding: 10px 12px; text-align: left; }
+
+    td { padding: 9px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+
+    tr:hover td { background: #f0f4ff; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.78rem; font-weight: bold; }
+
+    .Critical { background: #fce8e6; color: #c5221f; }
+    .High     { background: #fef3cd; color: #856404; }
+    .Medium   { background: #d1ecf1; color: #0c5460; }
+    .Low      { background: #d4edda; color: #155724; }
+  </style>
+</head>
+<body>
+
+  <h1>Meeting Task Assigner</h1>
+
+  <div class="section">
+    <label>Meeting Transcript</label>
+    <textarea id="transcriptText" placeholder="Paste meeting transcript here..."></textarea>
+  </div>
+
+  <div class="section">
+    <label>Team Members</label>
+    <div id="membersContainer">
+      <div class="member-row">
+        <input type="text" placeholder="Name" class="m-name" />
+        <input type="text" placeholder="Role" class="m-role" />
+        <input type="text" placeholder="Skills" class="m-skills" />
+        <button class="btn-remove" onclick="removeMember(this)">Remove</button>
+      </div>
+    </div>
+    <button class="btn-add" onclick="addMember()">+ Add Member</button>
+  </div>
+
+  <button class="btn-submit" id="submitBtn" onclick="submitForm()">Process Meeting</button>
+  <div id="status"></div>
+
+  <div class="section" id="results">
+    <h2>Transcript</h2>
+    <div class="transcript-box" id="transcriptOut"></div>
+
+    <h2>Tasks Found</h2>
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Task</th>
+            <th>Assigned To</th>
+            <th>Role</th>
+            <th>Deadline</th>
+            <th>Priority</th>
+            <th>Dependency</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody id="taskTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function addMember() {
+      var container = document.getElementById('membersContainer');
+      var row = document.createElement('div');
+      row.className = 'member-row';
+      row.innerHTML =
+        '<input type="text" placeholder="Name" class="m-name" />' +
+        '<input type="text" placeholder="Role" class="m-role" />' +
+        '<input type="text" placeholder="Skills" class="m-skills" />' +
+        '<button class="btn-remove" onclick="removeMember(this)">Remove</button>';
+      container.appendChild(row);
+    }
+
+    function removeMember(btn) {
+      var rows = document.querySelectorAll('.member-row');
+      if (rows.length > 1) {
+        btn.parentElement.remove();
+      }
+    }
+
+    async function submitForm() {
+      var btn = document.getElementById('submitBtn');
+      var statusDiv = document.getElementById('status');
+
+      var transcript = document.getElementById('transcriptText').value.trim();
+      if (!transcript) {
+        statusDiv.innerHTML = '<span class="error-text">Transcript paste karo.</span>';
+        return;
+      }
+
+      var members = [];
+      document.querySelectorAll('.member-row').forEach(function(row) {
+        var name = row.querySelector('.m-name').value.trim();
+        var role = row.querySelector('.m-role').value.trim();
+        var skills = row.querySelector('.m-skills').value.trim();
+        if (name) members.push({ name: name, role: role, skills: skills });
+      });
+
+      if (members.length === 0) {
+        statusDiv.innerHTML = '<span class="error-text">Kam se kam ek member add karo.</span>';
+        return;
+      }
+
+      btn.disabled = true;
+      statusDiv.textContent = 'Processing...';
+      document.getElementById('results').style.display = 'none';
+
+      try {
+        var response = await fetch('/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript: transcript, members: members })
+        });
+
+        var data = await response.json();
+
+        if (!response.ok) {
+          statusDiv.innerHTML = '<span class="error-text">' + (data.error || 'Something went wrong') + '</span>';
+          return;
+        }
+
+        document.getElementById('transcriptOut').textContent = data.transcript || '';
+
+        var tbody = document.getElementById('taskTableBody');
+        tbody.innerHTML = '';
+
+        if (!data.tasks || data.tasks.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">No tasks found.</td></tr>';
+        } else {
+          data.tasks.forEach(function(task) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td>' + task.id + '</td>' +
+              '<td>' + safe(task.description) + '</td>' +
+              '<td><strong>' + safe(task.assigned_to) + '</strong></td>' +
+              '<td>' + safe(task.role || '') + '</td>' +
+              '<td>' + safe(task.deadline || '—') + '</td>' +
+              '<td><span class="badge ' + task.priority + '">' + safe(task.priority) + '</span></td>' +
+              '<td>' + safe(task.dependency || '—') + '</td>' +
+              '<td>' + safe(task.reason || '—') + '</td>';
+            tbody.appendChild(tr);
+          });
+        }
+
+        document.getElementById('results').style.display = 'block';
+        statusDiv.textContent = '';
+
+      } catch (err) {
+        statusDiv.innerHTML = '<span class="error-text">Request failed: ' + err.message + '</span>';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function safe(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    window.onload = function() {
+      fetch('/defaults')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          document.getElementById('transcriptText').value = data.transcript;
+
+          var container = document.getElementById('membersContainer');
+          container.innerHTML = '';
+          data.members.forEach(function(m) {
+            var row = document.createElement('div');
+            row.className = 'member-row';
+            row.innerHTML =
+              '<input type="text" placeholder="Name" class="m-name" value="' + m.name + '" />' +
+              '<input type="text" placeholder="Role" class="m-role" value="' + m.role + '" />' +
+              '<input type="text" placeholder="Skills" class="m-skills" value="' + m.skills + '" />' +
+              '<button class="btn-remove" onclick="removeMember(this)">Remove</button>';
+            container.appendChild(row);
+          });
+        });
+    };
+  </script>
+
+</body>
+</html>
