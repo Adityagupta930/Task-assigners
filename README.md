@@ -1,136 +1,32 @@
 # Meeting Task Assigner
 
-Takes a meeting transcript and automatically figures out what tasks were discussed, who should do them, and when they need to be done.
+Takes a meeting transcript and automatically identifies tasks, assigns them to the right team members, and extracts deadlines, priorities, and dependencies.
 
 ## How it works
 
-### Step 1 — Split transcript into sentences
+### Task Detection — Naive Bayes Model (model.py + data.py)
 
-The transcript is split into individual sentences by looking for `.` `!` `?` characters. Each sentence is then checked one by one.
+A Naive Bayes classifier is trained from scratch on 100 labeled sentences — 60 task sentences and 40 non-task sentences. No external library is used. The model trains automatically when the app starts.
 
-```
-"Sakshi fix the login bug by tomorrow. Mohit optimize the database."
-        ↓
-["Sakshi fix the login bug by tomorrow.", "Mohit optimize the database."]
-```
+For every sentence in the transcript, the model calculates the probability of it being a task or not, and decides accordingly.
 
----
+### Task Assignment — Keyword Scoring (assigner.py)
 
-### Step 2 — Is this sentence a task? (extractor.py)
+6 skill categories are defined: frontend, backend, design, qa, devops, data. Each has a list of keywords.
 
-Every sentence goes through 3 checks:
+For every task and every member, keyword matches are counted per category. The counts are multiplied to get a match score. The member with the highest score gets the task.
 
-**Check 1 — Does it mention a team member's name?**
-Uses a custom `has_word()` function. Simple `"fix" in text` would also match inside words like "prefix", so `has_word()` checks that there is no letter before or after the word.
+If a member's name is directly mentioned in the transcript, they are assigned immediately without scoring.
 
-```python
-def has_word(text, word):
-    i = text.find(word)
-    while i != -1:
-        before = (i == 0) or (not text[i - 1].isalpha())
-        after  = (i + len(word) == len(text)) or (not text[i + len(word)].isalpha())
-        if before and after:
-            return True
-        i = text.find(word, i + 1)
-    return False
-```
+### Deadline, Priority, Dependency — String Matching (extractor.py)
 
-**Check 2 — Does it have an action verb?**
-A hand-written list of task verbs is checked — `fix`, `update`, `design`, `test`, `optimize`, `write`, `deploy`, etc.
+The sentence plus the next 2 sentences are used as context. Priority keywords like `critical`, `blocking`, `urgent` are matched. Deadline phrases like `tomorrow evening`, `by friday`, `next monday` are matched. Dependency phrases like `depends on`, `blocked by` are matched against existing task descriptions.
 
-**Check 3 — Does it have a task phrase?**
-Phrases like `we need to`, `someone should`, `we should`, `can you` are checked using simple `in` operator.
+### No libraries used in core logic
 
-If any combination matches → sentence is a task.
+`extractor.py`, `assigner.py`, `model.py`, and `data.py` have zero imports. Everything uses basic Python string methods — `.find()`, `.lower()`, `.startswith()`, `.split()`, `.strip()`.
 
-Some sentences are skipped even if they match — like `"hi everyone"`, `"this can wait"`, `"it's affecting"` — these are context sentences, not tasks.
-
----
-
-### Step 3 — Extract deadline, priority, dependency
-
-The sentence + next 2 sentences are combined as context window. This is because deadline is usually said right after the task:
-
-```
-"Fix the login bug."              ← task sentence
-"This needs to be done by tomorrow evening."  ← deadline is here
-```
-
-**Priority** — keywords like `critical`, `blocking`, `urgent` → Critical. `high priority`, `important` → High. Default is Medium.
-
-**Deadline** — phrases like `tomorrow evening`, `by friday`, `end of this week`, `next monday` are matched using simple `in` operator.
-
-**Dependency** — phrases like `depends on`, `blocked by` are found, then the hint words after them are matched against existing task descriptions.
-
-```
-"This depends on the login bug fix"
-        ↓
-hint words = ["login", "bug", "fix"]
-        ↓
-matches Task #1 "Fix the critical login bug"
-        ↓
-dependency = "Depends on Task #1"
-```
-
----
-
-### Step 4 — Clean the description
-
-Name mentions and filler words are removed from the sentence to get a clean task description.
-
-```
-"Sakshi, we need someone to fix the critical login bug"
-        ↓  remove "Sakshi," and "we need someone to"
-"Fix the critical login bug"
-```
-
----
-
-### Step 5 — Assign task to a member (assigner.py)
-
-**Rule 1 — Name directly mentioned → assign to that person**
-
-```
-"Sakshi fix the login bug" → assigned to Sakshi
-```
-
-**Rule 2 — No name mentioned → keyword score matching**
-
-6 skill categories are defined: `frontend`, `backend`, `design`, `qa`, `devops`, `data`. Each has a list of keywords.
-
-For every task and every member, count how many keywords from each category appear in their text. Then multiply the counts — this gives a match score.
-
-```
-Task: "update the API documentation"
-  backend keywords found: api, documentation → backend score = 2
-
-Mohit skills: "Database, APIs, Performance optimization"
-  backend keywords found: api, database, optimization → backend score = 3
-
-Score = 2 × 3 = 6  ✓ highest → assigned to Mohit
-
-Sakshi skills: "React, JavaScript, UI bugs"
-  backend keywords found: none → backend score = 0
-
-Score = 2 × 0 = 0  ✗
-```
-
-Whoever has the highest score gets the task. If all scores are 0, first member is assigned as fallback.
-
----
-
-### No libraries used
-
-`extractor.py` and `assigner.py` have zero imports. Everything is done with basic Python string methods:
-
-- `.find()` — locate a word in text
-- `.lower()` — case insensitive comparison
-- `.startswith()` — check sentence beginning
-- `.split()` — break text into words
-- `.strip()` — remove extra spaces
-- `.endswith()` — check sentence ending
-
-No regex, no NLP library, no ML model, no AI API — pure logic from scratch.
+Only `flask` and `json` are used in `app.py` for the web server.
 
 ---
 
@@ -146,7 +42,7 @@ pip install flask
 python app.py
 ```
 
-Open `http://localhost:5000` in your browser.
+Open `http://localhost:5000`
 
 ## Send data as JSON
 
@@ -165,13 +61,14 @@ curl -X POST http://localhost:5000/process \
 ## Files
 
 ```
-task/
-├── app.py          - Flask server
-├── extractor.py    - reads transcript, finds tasks
-├── assigner.py     - assigns tasks to team members
-├── test.py         - run this to test without starting the server
-├── transcript.txt  - sample transcript
-├── team.json       - sample team members
+Task-assigner/
+├── app.py           - Flask server
+├── extractor.py     - splits transcript, detects tasks, extracts deadline/priority/dependency
+├── assigner.py      - assigns tasks to members using keyword scoring
+├── model.py         - Naive Bayes classifier trained from scratch
+├── data.py          - 100 labeled training sentences
+├── test.py          - test without starting the server
+├── requirements.txt
 └── templates/
-    └── index.html  - web UI
+    └── index.html   - web UI
 ```
