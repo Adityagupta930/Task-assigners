@@ -24,9 +24,11 @@ The sentence plus the next 2 sentences are used as context. Priority keywords li
 
 ### No libraries used in core logic
 
-`extractor.py`, `assigner.py`, `model.py`, and `data.py` have zero imports. Everything uses basic Python string methods — `.find()`, `.lower()`, `.startswith()`, `.split()`, `.strip()`.
+`extractor.py`, `assigner.py`, and `data.py` have zero imports. Everything uses basic Python string methods — `.find()`, `.lower()`, `.startswith()`, `.split()`, `.strip()`.
 
-Only `flask` and `json` are used in `app.py` for the web server.
+`model.py` uses only `json`, `os`, and `pickle` (Python built-ins) to save and load the trained model as `model.pkl`.
+
+Only `flask` is used in `app.py` for the web server.
 
 ---
 
@@ -65,7 +67,8 @@ Task-assigner/
 ├── app.py           - Flask server
 ├── extractor.py     - splits transcript, detects tasks, extracts deadline/priority/dependency
 ├── assigner.py      - assigns tasks to members using keyword scoring
-├── model.py         - Naive Bayes classifier trained from scratch
+├── model.py         - Naive Bayes classifier trained from scratch, saved as model.pkl
+├── model.pkl        - saved trained model (auto-generated on first run)
 ├── data.py          - 100 labeled training sentences
 ├── test.py          - test without starting the server
 ├── requirements.txt
