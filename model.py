@@ -1,12 +1,21 @@
+import pickle
+import os
 from data import TRAINING_DATA
 
 _trained_model = None
+MODEL_FILE = "model.pkl"
 
 
 def get_model():
     global _trained_model
     if _trained_model is None:
-        _trained_model = train()
+        if os.path.exists(MODEL_FILE):
+            with open(MODEL_FILE, "rb") as f:
+                _trained_model = pickle.load(f)
+        else:
+            _trained_model = train()
+            with open(MODEL_FILE, "wb") as f:
+                pickle.dump(_trained_model, f)
     return _trained_model
 
 
