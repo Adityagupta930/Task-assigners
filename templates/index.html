@@ -7,123 +7,139 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #222; padding: 30px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a1a2e; min-height: 100vh; }
 
-    h1 { font-size: 1.6rem; margin-bottom: 24px; color: #1a1a2e; }
+    header { background: #1967d2; color: #fff; padding: 18px 32px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header span { font-size: 1.6rem; }
 
-    .section { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .container { max-width: 960px; margin: 32px auto; padding: 0 20px; }
 
-    label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.9rem; }
+    .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card-title { font-size: 1rem; font-weight: 700; color: #1967d2; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 
-    input[type="text"], textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; margin-bottom: 14px; }
+    textarea { width: 100%; padding: 10px 12px; border: 1px solid #d0d7de; border-radius: 8px; font-size: 0.9rem; resize: vertical; min-height: 120px; outline: none; transition: border 0.2s; font-family: inherit; }
+    textarea:focus { border-color: #1967d2; }
 
-    textarea { resize: vertical; min-height: 100px; }
+    .member-header { display: grid; grid-template-columns: 1fr 1fr 1fr 36px; gap: 8px; margin-bottom: 6px; }
+    .member-header span { font-size: 0.75rem; font-weight: 600; color: #888; padding-left: 4px; }
 
-    .member-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .member-row { display: grid; grid-template-columns: 1fr 1fr 1fr 36px; gap: 8px; margin-bottom: 8px; align-items: center; }
+    .member-row input { padding: 8px 10px; border: 1px solid #d0d7de; border-radius: 8px; font-size: 0.88rem; outline: none; transition: border 0.2s; width: 100%; }
+    .member-row input:focus { border-color: #1967d2; }
 
-    .member-row input { flex: 1; margin-bottom: 0; }
+    .btn-remove { background: #fce8e6; color: #c5221f; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+    .btn-remove:hover { background: #f5c6c2; }
 
-    .btn-add { background: #e8f0fe; color: #1967d2; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: bold; }
+    .btn-add { background: #e8f0fe; color: #1967d2; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 600; margin-top: 4px; }
+    .btn-add:hover { background: #d2e3fc; }
 
-    .btn-remove { background: #fce8e6; color: #c5221f; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
-
-    .btn-submit { background: #1967d2; color: #fff; border: none; padding: 10px 28px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold; }
-
+    .btn-submit { background: #1967d2; color: #fff; border: none; padding: 12px 36px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 700; width: 100%; margin-top: 4px; transition: background 0.2s; }
+    .btn-submit:hover { background: #1558b0; }
     .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    #status { margin-top: 12px; font-size: 0.9rem; color: #555; }
+    #status { text-align: center; margin-top: 10px; font-size: 0.9rem; color: #555; min-height: 22px; }
+    .error-text { color: #c5221f; font-weight: 600; }
 
-    .error-text { color: #c5221f; font-weight: bold; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: #1967d2; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     #results { display: none; }
 
-    .transcript-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; font-size: 0.85rem; white-space: pre-wrap; max-height: 180px; overflow-y: auto; margin-bottom: 20px; }
+    .transcript-box { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 8px; padding: 14px; font-size: 0.85rem; white-space: pre-wrap; max-height: 160px; overflow-y: auto; color: #444; line-height: 1.6; }
 
-    h2 { font-size: 1.1rem; margin-bottom: 12px; }
+    .tasks-grid { display: grid; gap: 14px; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .task-card { border: 1px solid #e0e7ef; border-radius: 10px; padding: 16px; background: #fff; transition: box-shadow 0.2s; }
+    .task-card:hover { box-shadow: 0 4px 16px rgba(25,103,210,0.1); }
 
-    th { background: #1967d2; color: #fff; padding: 10px 12px; text-align: left; }
+    .task-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .task-num { background: #1967d2; color: #fff; font-size: 0.75rem; font-weight: 700; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .task-desc { font-size: 0.95rem; font-weight: 600; color: #1a1a2e; flex: 1; }
 
-    td { padding: 9px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
-
-    tr:hover td { background: #f0f4ff; }
-
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.78rem; font-weight: bold; }
-
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
     .Critical { background: #fce8e6; color: #c5221f; }
     .High     { background: #fef3cd; color: #856404; }
     .Medium   { background: #d1ecf1; color: #0c5460; }
     .Low      { background: #d4edda; color: #155724; }
+
+    .task-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .meta-item { display: flex; align-items: center; gap: 5px; font-size: 0.82rem; color: #555; background: #f6f8fa; border-radius: 6px; padding: 4px 10px; }
+    .meta-item strong { color: #1a1a2e; }
+
+    .task-reason { margin-top: 10px; font-size: 0.82rem; color: #777; border-top: 1px solid #f0f0f0; padding-top: 8px; }
+
+    .dep-tag { background: #fff3e0; color: #e65100; border-radius: 6px; padding: 4px 10px; font-size: 0.82rem; font-weight: 600; }
+
+    .summary-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .summary-chip { background: #e8f0fe; color: #1967d2; border-radius: 20px; padding: 5px 14px; font-size: 0.82rem; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .member-header, .member-row { grid-template-columns: 1fr 1fr; }
+      .member-header span:nth-child(3), .member-row input:nth-child(3) { grid-column: 1 / -1; }
+      .member-row .btn-remove { grid-column: 2; justify-self: end; }
+      header { padding: 14px 16px; }
+      .container { padding: 0 12px; }
+    }
   </style>
 </head>
 <body>
 
-  <h1>Meeting Task Assigner</h1>
+  <header>
+    <span>🗂️</span>
+    <h1>Meeting Task Assigner</h1>
+  </header>
 
-  <div class="section">
-    <label>Meeting Transcript</label>
-    <textarea id="transcriptText" placeholder="Paste meeting transcript here..."></textarea>
-  </div>
+  <div class="container">
 
-  <div class="section">
-    <label>Team Members</label>
-    <div id="membersContainer">
-      <div class="member-row">
-        <input type="text" placeholder="Name" class="m-name" />
-        <input type="text" placeholder="Role" class="m-role" />
-        <input type="text" placeholder="Skills" class="m-skills" />
-        <button class="btn-remove" onclick="removeMember(this)">Remove</button>
+    <div class="card">
+      <div class="card-title">📝 Meeting Transcript</div>
+      <textarea id="transcriptText" placeholder="Paste your meeting transcript here..."></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👥 Team Members</div>
+      <div class="member-header">
+        <span>Name</span><span>Role</span><span>Skills</span><span></span>
+      </div>
+      <div id="membersContainer"></div>
+      <button class="btn-add" onclick="addMember()">+ Add Member</button>
+    </div>
+
+    <button class="btn-submit" id="submitBtn" onclick="submitForm()">⚡ Process Meeting</button>
+    <div id="status"></div>
+
+    <div id="results">
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title">📄 Transcript Used</div>
+        <div class="transcript-box" id="transcriptOut"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">✅ Identified Tasks</div>
+        <div class="summary-bar" id="summaryBar"></div>
+        <div class="tasks-grid" id="tasksGrid"></div>
       </div>
     </div>
-    <button class="btn-add" onclick="addMember()">+ Add Member</button>
-  </div>
 
-  <button class="btn-submit" id="submitBtn" onclick="submitForm()">Process Meeting</button>
-  <div id="status"></div>
-
-  <div class="section" id="results">
-    <h2>Transcript</h2>
-    <div class="transcript-box" id="transcriptOut"></div>
-
-    <h2>Tasks Found</h2>
-    <div style="overflow-x: auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Task</th>
-            <th>Assigned To</th>
-            <th>Role</th>
-            <th>Deadline</th>
-            <th>Priority</th>
-            <th>Dependency</th>
-            <th>Reason</th>
-          </tr>
-        </thead>
-        <tbody id="taskTableBody"></tbody>
-      </table>
-    </div>
   </div>
 
   <script>
-    function addMember() {
+    function addMember(name, role, skills) {
       var container = document.getElementById('membersContainer');
       var row = document.createElement('div');
       row.className = 'member-row';
       row.innerHTML =
-        '<input type="text" placeholder="Name" class="m-name" />' +
-        '<input type="text" placeholder="Role" class="m-role" />' +
-        '<input type="text" placeholder="Skills" class="m-skills" />' +
-        '<button class="btn-remove" onclick="removeMember(this)">Remove</button>';
+        '<input type="text" placeholder="Name" class="m-name" value="' + (name||'') + '" />' +
+        '<input type="text" placeholder="Role" class="m-role" value="' + (role||'') + '" />' +
+        '<input type="text" placeholder="Skills" class="m-skills" value="' + (skills||'') + '" />' +
+        '<button class="btn-remove" onclick="removeMember(this)" title="Remove">✕</button>';
       container.appendChild(row);
     }
 
     function removeMember(btn) {
-      var rows = document.querySelectorAll('.member-row');
-      if (rows.length > 1) {
+      if (document.querySelectorAll('.member-row').length > 1)
         btn.parentElement.remove();
-      }
     }
 
     async function submitForm() {
@@ -132,25 +148,25 @@
 
       var transcript = document.getElementById('transcriptText').value.trim();
       if (!transcript) {
-        statusDiv.innerHTML = '<span class="error-text">Transcript paste karo.</span>';
+        statusDiv.innerHTML = '<span class="error-text">⚠️ Please paste a transcript.</span>';
         return;
       }
 
       var members = [];
       document.querySelectorAll('.member-row').forEach(function(row) {
-        var name = row.querySelector('.m-name').value.trim();
-        var role = row.querySelector('.m-role').value.trim();
+        var name   = row.querySelector('.m-name').value.trim();
+        var role   = row.querySelector('.m-role').value.trim();
         var skills = row.querySelector('.m-skills').value.trim();
         if (name) members.push({ name: name, role: role, skills: skills });
       });
 
       if (members.length === 0) {
-        statusDiv.innerHTML = '<span class="error-text">Kam se kam ek member add karo.</span>';
+        statusDiv.innerHTML = '<span class="error-text">⚠️ Add at least one team member.</span>';
         return;
       }
 
       btn.disabled = true;
-      statusDiv.textContent = 'Processing...';
+      statusDiv.innerHTML = '<span class="spinner"></span> Processing...';
       document.getElementById('results').style.display = 'none';
 
       try {
@@ -163,38 +179,49 @@
         var data = await response.json();
 
         if (!response.ok) {
-          statusDiv.innerHTML = '<span class="error-text">' + (data.error || 'Something went wrong') + '</span>';
+          statusDiv.innerHTML = '<span class="error-text">⚠️ ' + (data.error || 'Something went wrong') + '</span>';
           return;
         }
 
         document.getElementById('transcriptOut').textContent = data.transcript || '';
 
-        var tbody = document.getElementById('taskTableBody');
-        tbody.innerHTML = '';
+        var grid = document.getElementById('tasksGrid');
+        var summaryBar = document.getElementById('summaryBar');
+        grid.innerHTML = '';
+        summaryBar.innerHTML = '';
 
         if (!data.tasks || data.tasks.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">No tasks found.</td></tr>';
+          grid.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">No tasks found.</p>';
         } else {
+          summaryBar.innerHTML =
+            '<span class="summary-chip">🗂 ' + data.tasks.length + ' Tasks</span>' +
+            '<span class="summary-chip">👥 ' + members.length + ' Members</span>';
+
           data.tasks.forEach(function(task) {
-            var tr = document.createElement('tr');
-            tr.innerHTML =
-              '<td>' + task.id + '</td>' +
-              '<td>' + safe(task.description) + '</td>' +
-              '<td><strong>' + safe(task.assigned_to) + '</strong></td>' +
-              '<td>' + safe(task.role || '') + '</td>' +
-              '<td>' + safe(task.deadline || '—') + '</td>' +
-              '<td><span class="badge ' + task.priority + '">' + safe(task.priority) + '</span></td>' +
-              '<td>' + safe(task.dependency || '—') + '</td>' +
-              '<td>' + safe(task.reason || '—') + '</td>';
-            tbody.appendChild(tr);
+            var card = document.createElement('div');
+            card.className = 'task-card';
+            card.innerHTML =
+              '<div class="task-top">' +
+                '<div class="task-num">' + task.id + '</div>' +
+                '<div class="task-desc">' + safe(task.description) + '</div>' +
+                '<span class="badge ' + task.priority + '">' + safe(task.priority) + '</span>' +
+              '</div>' +
+              '<div class="task-meta">' +
+                '<div class="meta-item">👤 <strong>' + safe(task.assigned_to) + '</strong> &nbsp;·&nbsp; ' + safe(task.role || '') + '</div>' +
+                (task.deadline ? '<div class="meta-item">📅 <strong>' + safe(task.deadline) + '</strong></div>' : '') +
+                (task.dependency ? '<div class="dep-tag">🔗 ' + safe(task.dependency) + '</div>' : '') +
+              '</div>' +
+              (task.reason ? '<div class="task-reason">💡 ' + safe(task.reason) + '</div>' : '');
+            grid.appendChild(card);
           });
         }
 
         document.getElementById('results').style.display = 'block';
         statusDiv.textContent = '';
+        document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 
       } catch (err) {
-        statusDiv.innerHTML = '<span class="error-text">Request failed: ' + err.message + '</span>';
+        statusDiv.innerHTML = '<span class="error-text">⚠️ Request failed: ' + err.message + '</span>';
       } finally {
         btn.disabled = false;
       }
@@ -209,19 +236,7 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
           document.getElementById('transcriptText').value = data.transcript;
-
-          var container = document.getElementById('membersContainer');
-          container.innerHTML = '';
-          data.members.forEach(function(m) {
-            var row = document.createElement('div');
-            row.className = 'member-row';
-            row.innerHTML =
-              '<input type="text" placeholder="Name" class="m-name" value="' + m.name + '" />' +
-              '<input type="text" placeholder="Role" class="m-role" value="' + m.role + '" />' +
-              '<input type="text" placeholder="Skills" class="m-skills" value="' + m.skills + '" />' +
-              '<button class="btn-remove" onclick="removeMember(this)">Remove</button>';
-            container.appendChild(row);
-          });
+          data.members.forEach(function(m) { addMember(m.name, m.role, m.skills); });
         });
     };
   </script>
